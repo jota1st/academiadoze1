@@ -54,6 +54,51 @@ public class AcessoAlunoInfrastructureTests
     }
 
     [Fact]
+    public async Task Historico_fora_do_horario_permitido_pode_ser_recarregado()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"academiadoze-{Guid.NewGuid():N}.db");
+        string connectionString = $"Data Source={databasePath};Cache=Shared";
+
+        try
+        {
+            await using var logradouroRepository = new LogradouroRepository(connectionString, DatabaseType.Sqlite);
+            await using var alunoRepository = new AlunoRepository(connectionString, DatabaseType.Sqlite);
+            await using var acessoRepository = new AcessoAlunoRepository(connectionString, DatabaseType.Sqlite);
+
+            var logradouro = await logradouroRepository.Adicionar(
+                Logradouro.Criar(0, "12345-678", "Rua Teste", "Centro", "São Paulo", "SP", "Brasil").Value!);
+            var aluno = await alunoRepository.Adicionar(CriarAluno(logradouro));
+            DateTime acessoHistorico = DateTime.Today.AddHours(23);
+
+            await using (var connection = new SqliteConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = """
+                    INSERT INTO tb_acesso (pessoa_tipo, pessoa_id, data_hora)
+                    VALUES (0, $pessoaId, $dataHora)
+                    """;
+                command.Parameters.AddWithValue("$pessoaId", aluno.Id);
+                command.Parameters.AddWithValue("$dataHora", acessoHistorico);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var acesso = await acessoRepository.ObterUltimoAcesso(aluno.Id);
+
+            Assert.NotNull(acesso);
+            Assert.Equal(acessoHistorico, acesso.DataHora);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(databasePath))
+            {
+                File.Delete(databasePath);
+            }
+        }
+    }
+
+    [Fact]
     public async Task Matricula_com_inicio_futuro_nao_permite_entrada_ate_a_data_de_inicio()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"academiadoze-{Guid.NewGuid():N}.db");

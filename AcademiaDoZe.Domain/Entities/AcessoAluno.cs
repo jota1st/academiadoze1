@@ -17,6 +17,20 @@ namespace AcademiaDoZe.Domain.Entities
         }
         public static Result<AcessoAluno> Criar(int id, Aluno aluno, DateTime dataHora)
         {
+            return CriarInterno(id, aluno, dataHora, validarIntervalo: true);
+        }
+
+        public static Result<AcessoAluno> Reconstituir(int id, Aluno aluno, DateTime dataHora)
+        {
+            return CriarInterno(id, aluno, dataHora, validarIntervalo: false);
+        }
+
+        private static Result<AcessoAluno> CriarInterno(
+            int id,
+            Aluno aluno,
+            DateTime dataHora,
+            bool validarIntervalo)
+        {
             var notifications = new List<Notification>();
 
             if (aluno == null)
@@ -24,7 +38,8 @@ namespace AcademiaDoZe.Domain.Entities
 
             if (dataHora == default)
                 notifications.Add(new Notification("DataHora", "DATA_HORA_OBRIGATORIA"));
-            else if (dataHora.TimeOfDay < new TimeSpan(6, 0, 0) || dataHora.TimeOfDay > new TimeSpan(22, 0, 0))
+            else if (validarIntervalo &&
+                     (dataHora.TimeOfDay < new TimeSpan(6, 0, 0) || dataHora.TimeOfDay > new TimeSpan(22, 0, 0)))
                 notifications.Add(new Notification("DataHora", "DATA_HORA_INTERVALO_INVALIDO"));
 
 

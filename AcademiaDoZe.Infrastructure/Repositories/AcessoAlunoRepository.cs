@@ -36,7 +36,7 @@ public class AcessoAlunoRepository : AcessoRepositoryBase<AcessoAluno>, IAcessoA
     {
         int id = reader.GetInt32Value("id_acesso");
         var aluno = AlunoRepository.Map(reader, "aluno_nome");
-        var result = AcessoAluno.Criar(id, aluno, reader.GetDateTimeValue("data_hora"));
+        var result = AcessoAluno.Reconstituir(id, aluno, reader.GetDateTimeValue("data_hora"));
         if (result.IsFailure)
         {
             throw new InfrastructureException(
