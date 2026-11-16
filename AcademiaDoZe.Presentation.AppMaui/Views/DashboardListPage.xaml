@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="AcademiaDoZe.Presentation.AppMaui.Views.DashboardListPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Dashboard">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="18">
+            <Label
+                FontAttributes="Bold"
+                FontSize="28"
+                Text="Resumo da academia" />
+
+            <Grid
+                ColumnDefinitions="*,*"
+                ColumnSpacing="16"
+                RowDefinitions="Auto,Auto"
+                RowSpacing="16">
+
+                <Border
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Padding="18"
+                    StrokeShape="RoundRectangle 12"
+                    Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label
+                            FontFamily="MaterialIcons"
+                            FontSize="32"
+                            HorizontalTextAlignment="Center"
+                            Text="&#xe7ef;" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            HorizontalTextAlignment="Center"
+                            Text="Colaboradores" />
+                        <Label
+                            HorizontalTextAlignment="Center"
+                            Text="Gestão de equipe" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Padding="18"
+                    StrokeShape="RoundRectangle 12"
+                    Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label
+                            FontFamily="MaterialIcons"
+                            FontSize="32"
+                            HorizontalTextAlignment="Center"
+                            Text="&#xe7fb;" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            HorizontalTextAlignment="Center"
+                            Text="Alunos" />
+                        <Label
+                            HorizontalTextAlignment="Center"
+                            Text="Frequência e cadastro" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Padding="18"
+                    StrokeShape="RoundRectangle 12"
+                    Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label
+                            FontFamily="MaterialIcons"
+                            FontSize="32"
+                            HorizontalTextAlignment="Center"
+                            Text="&#xe8dc;" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            HorizontalTextAlignment="Center"
+                            Text="Matrículas" />
+                        <Label
+                            HorizontalTextAlignment="Center"
+                            Text="Controle de planos" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Padding="18"
+                    StrokeShape="RoundRectangle 12"
+                    Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label
+                            FontFamily="MaterialIcons"
+                            FontSize="32"
+                            HorizontalTextAlignment="Center"
+                            Text="&#xe8b8;" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            HorizontalTextAlignment="Center"
+                            Text="Configurações" />
+                        <Label
+                            HorizontalTextAlignment="Center"
+                            Text="Banco e preferências" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <HorizontalStackLayout Spacing="12">
+                <Button
+                    Clicked="OnOpenColaboradoresClicked"
+                    HorizontalOptions="Fill"
+                    Text="Abrir colaboradores" />
+                <Button
+                    Clicked="OnOpenConfiguracoesClicked"
+                    HorizontalOptions="Fill"
+                    Style="{StaticResource ButtonSecondary}"
+                    Text="Configurações" />
+            </HorizontalStackLayout>
+
+            <Button
+                Clicked="OnOpenAcessosClicked"
+                Style="{StaticResource ButtonPrimary}"
+                Text="Registrar entrada ou saída" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

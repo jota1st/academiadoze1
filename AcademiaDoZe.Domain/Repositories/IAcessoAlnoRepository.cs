@@ -15,6 +15,3 @@ public interface IAcessoAlunoRepository : IRepository<AcessoAluno>
     // alunos que não registraram acesso nos últimos x dias
     Task<IEnumerable<Aluno>> ObterAlunosSemAcessoNosUltimosDias(int dias, CancellationToken cancellationToken = default);
 }
-// Validar se possui matrícula ativa.
-// Na entrada, mostrar quanto tempo ainda tem de plano.
-// Na saída, mostrar o tempo que permaneceu na academia.

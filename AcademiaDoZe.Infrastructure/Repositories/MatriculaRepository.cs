@@ -190,7 +190,8 @@ await using var command = await CreateCommandAsync(query, cancellationToken);
     {
         try
         {
-            string query = $"{BaseSelectQuery} WHERE m.aluno_id = @AlunoId AND m.data_fim >= {GetCurrentDateFunction()} ORDER BY m.data_fim DESC";
+            string dataAtual = GetCurrentDateFunction();
+            string query = $"{BaseSelectQuery} WHERE m.aluno_id = @AlunoId AND m.data_inicio <= {dataAtual} AND m.data_fim >= {dataAtual} ORDER BY m.data_fim DESC";
             await using var command = await CreateCommandAsync(query, cancellationToken);
             command.AddParameter("@AlunoId", alunoId, DbType.Int32);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -212,7 +213,8 @@ await using var command = await CreateCommandAsync(query, cancellationToken);
     {
         try
         {
-            string query = $"{BaseSelectQuery} WHERE m.data_fim >= {GetCurrentDateFunction()} {(alunoId > 0 ? "AND m.aluno_id = @id" : "")} ORDER BY m.data_fim ASC";
+            string dataAtual = GetCurrentDateFunction();
+            string query = $"{BaseSelectQuery} WHERE m.data_inicio <= {dataAtual} AND m.data_fim >= {dataAtual} {(alunoId > 0 ? "AND m.aluno_id = @id" : "")} ORDER BY m.data_fim ASC";
             await using var command = await CreateCommandAsync(query, cancellationToken);
             if (alunoId > 0)
             {

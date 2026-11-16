@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="AcademiaDoZe.Presentation.AppMaui.Views.AcessoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:AcademiaDoZe.Presentation.AppMaui.ViewModels"
+    x:DataType="vm:AcessoViewModel"
+    Title="Entradas e saídas">
+
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="16">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="26"
+                    Text="Registrar entrada ou saída" />
+
+                <Label
+                    Text="Consulte pelo CPF. Cada registro alterna entre entrada e saída."
+                    Style="{StaticResource SubHeadline}" />
+
+                <Border Padding="16" StrokeShape="RoundRectangle 12" Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Picker
+                            Title="Tipo de pessoa"
+                            ItemsSource="{Binding TiposPessoa}"
+                            SelectedItem="{Binding TipoPessoaSelecionado}" />
+
+                        <Entry
+                            AutomationId="AcessoCpfEntry"
+                            ClearButtonVisibility="WhileEditing"
+                            Keyboard="Numeric"
+                            MaxLength="14"
+                            Placeholder="CPF"
+                            ReturnCommand="{Binding BuscarPessoaCommand}"
+                            Text="{Binding Cpf}" />
+
+                        <Button
+                            AutomationId="BuscarAcessoButton"
+                            Command="{Binding BuscarPessoaCommand}"
+                            Style="{StaticResource ButtonPrimary}"
+                            Text="Consultar" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    IsVisible="{Binding TemPessoa}"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 12"
+                    Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Pessoa.Nome}" />
+                        <Label Text="{Binding Pessoa.Cpf, StringFormat='CPF: {0}'}" />
+                        <Label
+                            AutomationId="AcessoSituacaoLabel"
+                            FontAttributes="Bold"
+                            Text="{Binding Situacao}" />
+                        <Label Text="{Binding UltimoAcessoTexto}" />
+                        <Button
+                            AutomationId="RegistrarAcessoButton"
+                            Command="{Binding RegistrarAcessoCommand}"
+                            Style="{StaticResource ButtonPrimary}"
+                            Text="{Binding Acao}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <ActivityIndicator
+                    IsRunning="{Binding IsBusy}"
+                    IsVisible="{Binding IsBusy}"
+                    HorizontalOptions="Center" />
+
+                <Label
+                    AutomationId="AcessoMensagemLabel"
+                    Text="{Binding Mensagem}"
+                    Style="{StaticResource SubHeadline}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
