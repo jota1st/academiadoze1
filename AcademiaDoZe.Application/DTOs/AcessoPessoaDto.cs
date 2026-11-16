@@ -11,6 +11,8 @@ public sealed class AcessoPessoaDto
     public required bool EstaNaAcademia { get; init; }
     public DateTime? UltimoAcesso { get; init; }
 
+    public string Descricao => $"{Nome} — {Cpf}";
+    public string Iniciais => string.IsNullOrWhiteSpace(Nome) ? "?" : Nome[..1].ToUpperInvariant();
     public string Situacao => EstaNaAcademia ? "Na academia" : "Fora da academia";
     public string ProximaAcao => EstaNaAcademia ? "Registrar saída" : "Registrar entrada";
 }

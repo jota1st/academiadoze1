@@ -16,6 +16,74 @@ public sealed class AcessoService : IAcessoService
     private readonly Func<IMatriculaRepository> _matriculaRepositoryFactory;
     private readonly TimeProvider _timeProvider;
 
+    public async Task<IReadOnlyList<AcessoPessoaDto>> BuscarPessoasAsync(
+        PessoaAcessoTipo tipo,
+        string termo,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(termo))
+        {
+            throw new ArgumentException("Informe um nome ou CPF para buscar.", nameof(termo));
+        }
+
+        string busca = termo.Trim();
+        string buscaNumerica = ObterDigitos(busca);
+        var pessoas = new List<AcessoPessoaDto>();
+
+        switch (tipo)
+        {
+            case PessoaAcessoTipo.Aluno:
+            {
+                var alunos = await _alunoRepositoryFactory().ObterTodos(cancellationToken);
+                var acessoRepository = _acessoAlunoRepositoryFactory();
+                foreach (var aluno in alunos.Where(aluno => Corresponde(aluno.Nome, aluno.Cpf.Valor, busca, buscaNumerica))
+                             .OrderBy(aluno => aluno.Nome, StringComparer.CurrentCultureIgnoreCase))
+                {
+                    bool estaNaAcademia = await acessoRepository.EstaNaAcademia(aluno.Id, cancellationToken);
+                    var ultimoAcesso = await acessoRepository.ObterUltimoAcesso(aluno.Id, cancellationToken);
+                    pessoas.Add(new AcessoPessoaDto
+                    {
+                        Id = aluno.Id,
+                        Nome = aluno.Nome,
+                        Cpf = aluno.Cpf.Valor,
+                        Tipo = PessoaAcessoTipo.Aluno,
+                        EstaNaAcademia = estaNaAcademia,
+                        UltimoAcesso = ultimoAcesso?.DataHora
+                    });
+                }
+
+                break;
+            }
+            case PessoaAcessoTipo.Colaborador:
+            {
+                var colaboradores = await _colaboradorRepositoryFactory().ObterTodos(cancellationToken);
+                var acessoRepository = _acessoColaboradorRepositoryFactory();
+                foreach (var colaborador in colaboradores.Where(colaborador =>
+                                 Corresponde(colaborador.Nome, colaborador.Cpf.Valor, busca, buscaNumerica))
+                             .OrderBy(colaborador => colaborador.Nome, StringComparer.CurrentCultureIgnoreCase))
+                {
+                    bool estaNaAcademia = await acessoRepository.EstaNaAcademia(colaborador.Id, cancellationToken);
+                    var ultimoAcesso = await acessoRepository.ObterUltimoAcesso(colaborador.Id, cancellationToken);
+                    pessoas.Add(new AcessoPessoaDto
+                    {
+                        Id = colaborador.Id,
+                        Nome = colaborador.Nome,
+                        Cpf = colaborador.Cpf.Valor,
+                        Tipo = PessoaAcessoTipo.Colaborador,
+                        EstaNaAcademia = estaNaAcademia,
+                        UltimoAcesso = ultimoAcesso?.DataHora
+                    });
+                }
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(tipo), tipo, "Tipo de pessoa inválido.");
+        }
+
+        return pessoas;
+    }
+
     public AcessoService(
         Func<IAlunoRepository> alunoRepositoryFactory,
         Func<IColaboradorRepository> colaboradorRepositoryFactory,
@@ -44,6 +112,55 @@ public sealed class AcessoService : IAcessoService
             PessoaAcessoTipo.Colaborador => await ObterColaboradorAsync(cpfValue, cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(tipo), tipo, "Tipo de pessoa inválido.")
         };
+    }
+
+    public async Task<IReadOnlyList<AcessoRegistroDto>> ObterAcessosDeHojeAsync(
+        CancellationToken cancellationToken = default)
+    {
+        DateOnly hoje = DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
+        var registros = new List<AcessoRegistroDto>();
+
+        var repositorioAlunos = _acessoAlunoRepositoryFactory();
+        var acessosAlunos = await repositorioAlunos
+            .ObterAcessosPorAlunoPeriodo(inicio: hoje, fim: hoje, cancellationToken: cancellationToken);
+        foreach (var grupo in acessosAlunos.GroupBy(acesso => acesso.Aluno.Id))
+        {
+            bool estadoAtual = await repositorioAlunos.EstaNaAcademia(grupo.Key, cancellationToken);
+            foreach (var acesso in grupo.OrderByDescending(acesso => acesso.DataHora).ThenByDescending(acesso => acesso.Id))
+            {
+                registros.Add(new AcessoRegistroDto
+                {
+                    Nome = acesso.Aluno.Nome,
+                    TipoPessoa = PessoaAcessoTipo.Aluno,
+                    DataHora = acesso.DataHora,
+                    Entrada = estadoAtual
+                });
+                estadoAtual = !estadoAtual;
+            }
+        }
+
+        var repositorioColaboradores = _acessoColaboradorRepositoryFactory();
+        var acessosColaboradores = await repositorioColaboradores
+            .ObterAcessosPorColaboradorPeriodo(inicio: hoje, fim: hoje, cancellationToken: cancellationToken);
+        foreach (var grupo in acessosColaboradores.GroupBy(acesso => acesso.Colaborador.Id))
+        {
+            bool estadoAtual = await repositorioColaboradores.EstaNaAcademia(grupo.Key, cancellationToken);
+            foreach (var acesso in grupo.OrderByDescending(acesso => acesso.DataHora).ThenByDescending(acesso => acesso.Id))
+            {
+                registros.Add(new AcessoRegistroDto
+                {
+                    Nome = acesso.Colaborador.Nome,
+                    TipoPessoa = PessoaAcessoTipo.Colaborador,
+                    DataHora = acesso.DataHora,
+                    Entrada = estadoAtual
+                });
+                estadoAtual = !estadoAtual;
+            }
+        }
+
+        return registros
+            .OrderByDescending(registro => registro.DataHora)
+            .ToArray();
     }
 
     public async Task<AcessoPessoaDto> RegistrarProximoAcessoAsync(
@@ -180,4 +297,13 @@ public sealed class AcessoService : IAcessoService
 
         return resultado.Value!;
     }
+
+    private static bool Corresponde(string nome, string cpf, string busca, string buscaNumerica)
+    {
+        return nome.Contains(busca, StringComparison.CurrentCultureIgnoreCase) ||
+               (buscaNumerica.Length > 0 && ObterDigitos(cpf).Contains(buscaNumerica, StringComparison.Ordinal));
+    }
+
+    private static string ObterDigitos(string valor) =>
+        new(valor.Where(char.IsDigit).ToArray());
 }

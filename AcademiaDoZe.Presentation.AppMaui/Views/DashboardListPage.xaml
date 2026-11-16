@@ -7,6 +7,17 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="18">
+            <Border
+                Padding="0"
+                BackgroundColor="#F4F4F5"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 18">
+                <Image
+                    Aspect="AspectFit"
+                    HeightRequest="160"
+                    Source="academiadoze_logo.png" />
+            </Border>
+
             <Label
                 FontAttributes="Bold"
                 FontSize="28"

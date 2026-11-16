@@ -30,17 +30,17 @@ public class AcessoColaboradorTests
             Assert.True(result.IsSuccess);
         }
     }
-    [Theory(DisplayName = "AcessoColaborador: horario fora do intervalo -> DATAHORA_INTERVALO")]
+    [Theory(DisplayName = "AcessoColaborador: aceita horário fora do intervalo dos alunos")]
     [InlineData(5, 59)]
     [InlineData(22, 1)]
-    public void Deve_Falhar_Criacao_Quando_HorarioForaDoIntervalo(int hour, int minute)
+    public void Deve_Permitir_Criacao_Quando_ColaboradorEstiverForaDoIntervaloDosAlunos(int hour, int minute)
     {
         var colaborador = GetValidColaborador();
         var dataHora = DateTime.Today.AddHours(hour).AddMinutes(minute);
         var result = AcessoColaborador.Criar(1, colaborador, dataHora);
-        Assert.True(result.IsFailure);
-        Assert.NotEmpty(result.Notifications);
-        Assert.Contains(result.Notifications, n => n.Mensagem == "DATA_HORA_INTERVALO_INVALIDO");
+        Assert.True(result.IsSuccess);
+        Assert.Equal(colaborador.Id, result.Value!.Colaborador.Id);
+        Assert.Equal(dataHora, result.Value.DataHora);
     }
     [Theory(DisplayName = "AcessoColaborador: criação bem-sucedida em horários permitidos")]
     [InlineData(10)]
@@ -54,31 +54,15 @@ public class AcessoColaboradorTests
         Assert.Equal(colaborador.Id, result.Value!.Colaborador.Id);
         Assert.Equal(dataHora, result.Value.DataHora);
     }
-    [Theory(DisplayName = "AcessoColaborador: permite horários de borda 06:00 e 22:00")]
-    [InlineData(6)]
+    [Theory(DisplayName = "AcessoColaborador: aceita horários fora do turno do aluno")]
+    [InlineData(5)]
     [InlineData(22)]
-    public void Deve_Permitir_HorariosDeBorda_06_00_e_22_00(int hour)
+    [InlineData(23)]
+    public void Deve_Permitir_HorariosForaDoTurnoDoAluno(int hour)
     {
         var colaborador = GetValidColaborador();
         var time = DateTime.Today.AddHours(hour);
         var r = AcessoColaborador.Criar(1, colaborador, time);
         Assert.True(r.IsSuccess);
-    }
-
-    [Fact(DisplayName = "AcessoColaborador: 22:01 é inválido (1 minuto após o limite)")]
-    public void Deve_Falhar_Quando_HorarioUmMinutoAposLimite()
-    {
-        var colaborador = Colaborador.Criar(1, "Fulano", "529.982.247-25", DateOnly.FromDateTime(DateTime.Today.AddYears(-30)),
-            "(11) 91234-5678", "user@example.com",
-            Logradouro.Criar(1, "12345-678", "Rua", "Bairro", "Cidade", "SP", "Brasil").Value!,
-            "123", "", "Abcdef", Arquivo.Criar(new byte[] { 1 }).Value!,
-            DateOnly.FromDateTime(DateTime.Today.AddYears(-1)), ColaboradorTipo.Atendente, ColaboradorVinculo.CLT).Value!;
-
-        var dataHora = DateTime.Today.AddHours(22).AddMinutes(1);
-
-        var result = AcessoColaborador.Criar(1, colaborador, dataHora);
-
-        Assert.True(result.IsFailure);
-        Assert.Contains(result.Notifications, n => n.Mensagem == "DATA_HORA_INTERVALO_INVALIDO");
     }
 }

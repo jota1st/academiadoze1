@@ -4,79 +4,266 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:AcademiaDoZe.Presentation.AppMaui.ViewModels"
+    xmlns:dto="clr-namespace:AcademiaDoZe.Application.DTOs;assembly=AcademiaDoZe.Application"
     x:DataType="vm:AcessoViewModel"
-    Title="Entradas e saídas">
+    Title="Controle de acesso"
+    Background="#111116">
 
-    <Grid>
-        <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="16">
-                <Label
-                    FontAttributes="Bold"
-                    FontSize="26"
-                    Text="Registrar entrada ou saída" />
+    <CollectionView
+        ItemsSource="{Binding AcessosHoje}"
+        SelectionMode="None"
+        Background="#111116">
+        <CollectionView.Header>
+            <VerticalStackLayout Padding="20,20,20,10" Spacing="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="26"
+                        Text="Controle de Acesso"
+                        TextColor="#F4F4F5" />
+                    <Label
+                        FontSize="14"
+                        Text="Gerencie entradas e saídas da academia."
+                        TextColor="#A1A1AA" />
+                </VerticalStackLayout>
 
-                <Label
-                    Text="Consulte pelo CPF. Cada registro alterna entre entrada e saída."
-                    Style="{StaticResource SubHeadline}" />
+                <Border
+                    Padding="16"
+                    Background="#1C1C24"
+                    Stroke="#343441"
+                    StrokeShape="RoundRectangle 16">
+                    <VerticalStackLayout Spacing="14">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="17"
+                            Text="Localizar pessoa"
+                            TextColor="#F4F4F5" />
 
-                <Border Padding="16" StrokeShape="RoundRectangle 12" Style="{StaticResource CardBorder}">
-                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <Button
+                                Grid.Column="0"
+                                Command="{Binding SelecionarTipoCommand}"
+                                CommandParameter="Aluno"
+                                CornerRadius="10"
+                                Text="Aluno"
+                                Background="#252533"
+                                TextColor="#E4E4E7">
+                                <Button.Triggers>
+                                    <DataTrigger Binding="{Binding TipoPessoaSelecionado}" TargetType="Button" Value="Aluno">
+                                        <Setter Property="Background" Value="#6D43D8" />
+                                        <Setter Property="TextColor" Value="White" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button
+                                Grid.Column="1"
+                                Command="{Binding SelecionarTipoCommand}"
+                                CommandParameter="Colaborador"
+                                CornerRadius="10"
+                                Text="Colaborador"
+                                Background="#252533"
+                                TextColor="#E4E4E7">
+                                <Button.Triggers>
+                                    <DataTrigger Binding="{Binding TipoPessoaSelecionado}" TargetType="Button" Value="Colaborador">
+                                        <Setter Property="Background" Value="#6D43D8" />
+                                        <Setter Property="TextColor" Value="White" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </Grid>
+
+                        <Label
+                            FontSize="13"
+                            Text="Nome ou CPF"
+                            TextColor="#D4D4D8" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry
+                                Grid.Column="0"
+                                AutomationId="AcessoCpfEntry"
+                                Background="#14141B"
+                                ClearButtonVisibility="WhileEditing"
+                                MaxLength="120"
+                                Placeholder="Digite o nome ou CPF"
+                                PlaceholderColor="#A1A1AA"
+                                ReturnCommand="{Binding BuscarPessoaCommand}"
+                                Text="{Binding TermoBusca}"
+                                TextColor="#F4F4F5" />
+                            <Button
+                                Grid.Column="1"
+                                AutomationId="BuscarAcessoButton"
+                                Command="{Binding BuscarPessoaCommand}"
+                                CornerRadius="10"
+                                Padding="18,10"
+                                Text="Buscar"
+                                TextColor="White"
+                                Background="#6D43D8" />
+                        </Grid>
+
                         <Picker
-                            Title="Tipo de pessoa"
-                            ItemsSource="{Binding TiposPessoa}"
-                            SelectedItem="{Binding TipoPessoaSelecionado}" />
-
-                        <Entry
-                            AutomationId="AcessoCpfEntry"
-                            ClearButtonVisibility="WhileEditing"
-                            Keyboard="Numeric"
-                            MaxLength="14"
-                            Placeholder="CPF"
-                            ReturnCommand="{Binding BuscarPessoaCommand}"
-                            Text="{Binding Cpf}" />
-
-                        <Button
-                            AutomationId="BuscarAcessoButton"
-                            Command="{Binding BuscarPessoaCommand}"
-                            Style="{StaticResource ButtonPrimary}"
-                            Text="Consultar" />
+                            AutomationId="AcessoPessoaPicker"
+                            IsVisible="{Binding TemResultados}"
+                            ItemsSource="{Binding PessoasEncontradas}"
+                            ItemDisplayBinding="{Binding Descricao}"
+                            SelectedItem="{Binding Pessoa}"
+                            Title="Selecione uma pessoa"
+                            TitleColor="#A1A1AA"
+                            TextColor="#F4F4F5"
+                            BackgroundColor="#14141B" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border
                     IsVisible="{Binding TemPessoa}"
                     Padding="16"
-                    StrokeShape="RoundRectangle 12"
-                    Style="{StaticResource CardBorder}">
-                    <VerticalStackLayout Spacing="10">
+                    Background="#1C1C24"
+                    Stroke="#343441"
+                    StrokeShape="RoundRectangle 16">
+                    <VerticalStackLayout Spacing="14">
                         <Label
                             FontAttributes="Bold"
-                            FontSize="20"
-                            Text="{Binding Pessoa.Nome}" />
-                        <Label Text="{Binding Pessoa.Cpf, StringFormat='CPF: {0}'}" />
+                            FontSize="17"
+                            Text="Identificação e liberação"
+                            TextColor="#F4F4F5" />
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Border
+                                Grid.Column="0"
+                                HeightRequest="64"
+                                WidthRequest="64"
+                                Background="#33245E"
+                                Stroke="#6D43D8"
+                                StrokeShape="RoundRectangle 32"
+                                VerticalOptions="Start">
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="24"
+                                    HorizontalOptions="Center"
+                                    Text="{Binding Iniciais}"
+                                    TextColor="#E9D5FF"
+                                    VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                <Label
+                                    AutomationId="AcessoPessoaNomeLabel"
+                                    FontAttributes="Bold"
+                                    FontSize="19"
+                                    Text="{Binding Pessoa.Nome}"
+                                    TextColor="#F4F4F5" />
+                                <Label
+                                    FontSize="14"
+                                    Text="{Binding Pessoa.Cpf, StringFormat='CPF: {0}'}"
+                                    TextColor="#A1A1AA" />
+                                <Label
+                                    AutomationId="AcessoSituacaoLabel"
+                                    FontAttributes="Bold"
+                                    FontSize="14"
+                                    Text="{Binding Situacao}"
+                                    TextColor="{Binding SituacaoCor}" />
+                            </VerticalStackLayout>
+                        </Grid>
+
                         <Label
-                            AutomationId="AcessoSituacaoLabel"
-                            FontAttributes="Bold"
-                            Text="{Binding Situacao}" />
-                        <Label Text="{Binding UltimoAcessoTexto}" />
+                            FontSize="13"
+                            Text="{Binding UltimoAcessoTexto}"
+                            TextColor="#A1A1AA" />
                         <Button
                             AutomationId="RegistrarAcessoButton"
                             Command="{Binding RegistrarAcessoCommand}"
-                            Style="{StaticResource ButtonPrimary}"
-                            Text="{Binding Acao}" />
+                            CornerRadius="12"
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            MinimumHeightRequest="54"
+                            Text="{Binding Acao}"
+                            TextColor="White"
+                            Background="{Binding CorBotaoAcao}" />
                     </VerticalStackLayout>
                 </Border>
 
+                <Border
+                    Padding="12"
+                    Background="{Binding MensagemFundo}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12">
+                    <Label
+                        AutomationId="AcessoMensagemLabel"
+                        FontSize="14"
+                        Text="{Binding Mensagem}"
+                        TextColor="{Binding MensagemTexto}" />
+                </Border>
+
                 <ActivityIndicator
+                    HorizontalOptions="Center"
                     IsRunning="{Binding IsBusy}"
                     IsVisible="{Binding IsBusy}"
-                    HorizontalOptions="Center" />
+                    Color="#A78BFA" />
 
-                <Label
-                    AutomationId="AcessoMensagemLabel"
-                    Text="{Binding Mensagem}"
-                    Style="{StaticResource SubHeadline}" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Label
+                        Grid.Column="0"
+                        FontAttributes="Bold"
+                        FontSize="18"
+                        Text="Acessos registrados hoje"
+                        TextColor="#F4F4F5"
+                        VerticalOptions="Center" />
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding CarregarAcessosHojeCommand}"
+                        CornerRadius="9"
+                        Padding="12,8"
+                        Text="Atualizar"
+                        FontSize="13"
+                        TextColor="#E9D5FF"
+                        Background="#33245E" />
+                </Grid>
             </VerticalStackLayout>
-        </ScrollView>
-    </Grid>
+        </CollectionView.Header>
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="dto:AcessoRegistroDto">
+                <Border
+                    Margin="20,4"
+                    Padding="14"
+                    Background="#1C1C24"
+                    Stroke="#343441"
+                    StrokeShape="RoundRectangle 12">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            FontSize="15"
+                            Text="{Binding Nome}"
+                            TextColor="#F4F4F5" />
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            Text="{Binding DataHora, StringFormat='{0:HH:mm}'}"
+                            TextColor="#E4E4E7" />
+                        <Label
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            FontSize="13"
+                            Text="{Binding Evento, StringFormat='{0} registrada'}"
+                            TextColor="#A78BFA" />
+                        <Label
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            FontSize="13"
+                            Text="{Binding TipoPessoaTexto}"
+                            TextColor="#A1A1AA" />
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+
+        <CollectionView.EmptyView>
+            <Label
+                Padding="20"
+                HorizontalTextAlignment="Center"
+                Text="{Binding MensagemHistorico}"
+                TextColor="#A1A1AA" />
+        </CollectionView.EmptyView>
+    </CollectionView>
 </ContentPage>

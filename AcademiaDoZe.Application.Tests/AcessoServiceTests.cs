@@ -82,6 +82,69 @@ public class AcessoServiceTests
         Assert.Equal("Registrar entrada", resultado.ProximaAcao);
     }
 
+    [Fact]
+    public async Task Busca_por_parte_do_cpf_retorna_pessoa_com_situacao_atual()
+    {
+        var aluno = CriarAluno();
+        var alunoRepository = CriarProxy<IAlunoRepository>((nome, _) => nome switch
+        {
+            "ObterTodos" => Task.FromResult<IEnumerable<Aluno>>([aluno]),
+            _ => throw new NotSupportedException($"Método não esperado: {nome}")
+        });
+        var acessoAlunoRepository = CriarProxy<IAcessoAlunoRepository>((nome, _) => nome switch
+        {
+            "EstaNaAcademia" => Task.FromResult(true),
+            "ObterUltimoAcesso" => Task.FromResult<AcessoAluno?>(null),
+            _ => throw new NotSupportedException($"Método não esperado: {nome}")
+        });
+        var service = new AcessoService(
+            () => alunoRepository,
+            () => throw new NotSupportedException(),
+            () => acessoAlunoRepository,
+            () => throw new NotSupportedException(),
+            () => throw new NotSupportedException());
+
+        var resultado = await service.BuscarPessoasAsync(PessoaAcessoTipo.Aluno, "982247");
+
+        var pessoa = Assert.Single(resultado);
+        Assert.Equal("Aluno Teste", pessoa.Nome);
+        Assert.True(pessoa.EstaNaAcademia);
+    }
+
+    [Fact]
+    public async Task Acessos_de_hoje_sao_ordenados_e_classificados_pela_situacao_atual()
+    {
+        var aluno = CriarAluno();
+        var acessoAnterior = AcessoAluno.Criar(10, aluno, new DateTime(2026, 11, 15, 8, 0, 0)).Value!;
+        var acessoMaisRecente = AcessoAluno.Criar(11, aluno, new DateTime(2026, 11, 15, 12, 0, 0)).Value!;
+        var acessoAlunoRepository = CriarProxy<IAcessoAlunoRepository>((nome, _) => nome switch
+        {
+            "ObterAcessosPorAlunoPeriodo" => Task.FromResult<IEnumerable<AcessoAluno>>(
+                [acessoAnterior, acessoMaisRecente]),
+            "EstaNaAcademia" => Task.FromResult(true),
+            _ => throw new NotSupportedException($"Método não esperado: {nome}")
+        });
+        var acessoColaboradorRepository = CriarProxy<IAcessoColaboradorRepository>((nome, _) => nome switch
+        {
+            "ObterAcessosPorColaboradorPeriodo" => Task.FromResult<IEnumerable<AcessoColaborador>>([]),
+            _ => throw new NotSupportedException($"Método não esperado: {nome}")
+        });
+        var service = new AcessoService(
+            () => throw new NotSupportedException(),
+            () => throw new NotSupportedException(),
+            () => acessoAlunoRepository,
+            () => acessoColaboradorRepository,
+            () => throw new NotSupportedException(),
+            CriarRelogio());
+
+        var resultado = await service.ObterAcessosDeHojeAsync();
+
+        Assert.Equal(2, resultado.Count);
+        Assert.True(resultado[0].Entrada);
+        Assert.Equal(new DateTime(2026, 11, 15, 12, 0, 0), resultado[0].DataHora);
+        Assert.False(resultado[1].Entrada);
+    }
+
     private static AcessoService CriarService(
         bool possuiMatriculaAtiva,
         bool estaNaAcademia,
@@ -89,19 +152,7 @@ public class AcessoServiceTests
         Action aoConsultarMatricula,
         TimeProvider timeProvider)
     {
-        var logradouro = Logradouro.Criar(1, "12345-678", "Rua Teste", "Centro", "São Paulo", "SP", "Brasil").Value!;
-        var aluno = Aluno.Criar(
-            1,
-            "Aluno Teste",
-            CpfValido,
-            DateOnly.FromDateTime(DateTime.Today.AddYears(-20)),
-            "(11) 91234-5678",
-            "aluno@teste.com",
-            logradouro,
-            "123",
-            string.Empty,
-            "Abcdef",
-            Arquivo.Criar([1, 2, 3]).Value!).Value!;
+        var aluno = CriarAluno();
 
         var alunoRepository = CriarProxy<IAlunoRepository>((nome, _) => nome switch
         {
@@ -136,6 +187,23 @@ public class AcessoServiceTests
             () => acessoColaboradorRepository,
             () => matriculaRepository,
             timeProvider);
+    }
+
+    private static Aluno CriarAluno()
+    {
+        var logradouro = Logradouro.Criar(1, "12345-678", "Rua Teste", "Centro", "São Paulo", "SP", "Brasil").Value!;
+        return Aluno.Criar(
+            1,
+            "Aluno Teste",
+            CpfValido,
+            DateOnly.FromDateTime(DateTime.Today.AddYears(-20)),
+            "(11) 91234-5678",
+            "aluno@teste.com",
+            logradouro,
+            "123",
+            string.Empty,
+            "Abcdef",
+            Arquivo.Criar([1, 2, 3]).Value!).Value!;
     }
 
     private static T CriarProxy<T>(Func<string, object?[], object?> handler)

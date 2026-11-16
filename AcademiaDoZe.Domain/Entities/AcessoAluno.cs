@@ -24,7 +24,7 @@ namespace AcademiaDoZe.Domain.Entities
 
             if (dataHora == default)
                 notifications.Add(new Notification("DataHora", "DATA_HORA_OBRIGATORIA"));
-            else if (dataHora.TimeOfDay < new TimeSpan(6, 0, 0) || dataHora.TimeOfDay > new TimeSpan(22, 0, 0)) 
+            else if (dataHora.TimeOfDay < new TimeSpan(6, 0, 0) || dataHora.TimeOfDay > new TimeSpan(22, 0, 0))
                 notifications.Add(new Notification("DataHora", "DATA_HORA_INTERVALO_INVALIDO"));
 
 
