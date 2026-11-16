@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "AcademiaDoZe.slnx"
+    "dotnet.defaultSolution": "AcademiaDoZe.slnx",
+    "maui.configuration.useLaunchJsonConfigurations": true
 }
