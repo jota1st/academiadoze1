@@ -9,11 +9,8 @@
     Title="Controle de acesso"
     Background="#111116">
 
-    <CollectionView
-        ItemsSource="{Binding AcessosHoje}"
-        SelectionMode="None"
-        Background="#111116">
-        <CollectionView.Header>
+    <Grid RowDefinitions="2*,*">
+        <ScrollView Grid.Row="0">
             <VerticalStackLayout Padding="20,20,20,10" Spacing="16">
                 <VerticalStackLayout Spacing="4">
                     <Label
@@ -216,8 +213,13 @@
                         Background="#33245E" />
                 </Grid>
             </VerticalStackLayout>
-        </CollectionView.Header>
+        </ScrollView>
 
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding AcessosHoje}"
+            SelectionMode="None"
+            Background="#111116">
         <CollectionView.ItemTemplate>
             <DataTemplate x:DataType="dto:AcessoRegistroDto">
                 <Border
@@ -265,5 +267,6 @@
                 Text="{Binding MensagemHistorico}"
                 TextColor="#A1A1AA" />
         </CollectionView.EmptyView>
-    </CollectionView>
+        </CollectionView>
+    </Grid>
 </ContentPage>
