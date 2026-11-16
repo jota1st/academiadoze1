@@ -82,6 +82,35 @@ public class AcessoServiceTests
         Assert.Equal("Registrar entrada", resultado.ProximaAcao);
     }
 
+    [Theory(DisplayName = "Aluno pode registrar entrada e saída fora do horário comercial")]
+    [InlineData(false, true, "Registrar saída")]
+    [InlineData(true, false, "Registrar entrada")]
+    public async Task Aluno_pode_registrar_entrada_e_saida_fora_do_horario(
+        bool estaNaAcademia,
+        bool possuiMatriculaAtiva,
+        string proximaAcao)
+    {
+        AcessoAluno? acessoAdicionado = null;
+        var horarioNoturno = new FixedTimeProvider(new DateTime(2026, 11, 15, 23, 0, 0));
+        var service = CriarService(
+            possuiMatriculaAtiva,
+            estaNaAcademia,
+            acesso =>
+            {
+                acessoAdicionado = acesso;
+                return acesso;
+            },
+            () => { },
+            horarioNoturno);
+
+        var resultado = await service.RegistrarProximoAcessoAsync(PessoaAcessoTipo.Aluno, CpfValido);
+
+        Assert.NotNull(acessoAdicionado);
+        Assert.Equal(new DateTime(2026, 11, 15, 23, 0, 0), acessoAdicionado.DataHora);
+        Assert.Equal(!estaNaAcademia, resultado.EstaNaAcademia);
+        Assert.Equal(proximaAcao, resultado.ProximaAcao);
+    }
+
     [Fact]
     public async Task Busca_por_parte_do_cpf_retorna_pessoa_com_situacao_atual()
     {

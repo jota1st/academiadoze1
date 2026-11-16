@@ -69,13 +69,12 @@ public class AcessoAlunoTests
 
         }
     }
-    [Theory(DisplayName = "AcessoAluno: horario fora do intervalo -> DATAHORA_INTERVALO")]
+    [Theory(DisplayName = "AcessoAluno: permite acesso fora do antigo intervalo")]
     [InlineData(5, 59)]
     [InlineData(22, 1)]
-    public void Deve_Falhar_Criacao_Quando_HorarioForaDoIntervalo
-
+    [InlineData(23, 0)]
+    public void Deve_Criar_Quando_HorarioForaDoAntigoIntervalo
     (int hour, int minute)
-
     {
         var aluno = GetValidAluno();
         var dataHora = DateTime.Today.AddHours
@@ -86,18 +85,8 @@ public class AcessoAlunoTests
 
         .Criar(1, aluno, dataHora);
 
-        Assert
-        .True
-        (result.IsFailure);
-        Assert
-        .NotEmpty
-        (result.Notifications);
-
-        Assert
-        .Contains
-        (result.Notifications,
-        n =>
-        n.Mensagem == "DATA_HORA_INTERVALO_INVALIDO");
+        Assert.True(result.IsSuccess);
+        Assert.Equal(dataHora, result.Value!.DataHora);
 
     }
     [Theory(DisplayName = "AcessoAluno: criação bem-sucedida em horários permitidos")]
@@ -148,24 +137,6 @@ public class AcessoAlunoTests
         (
         r.IsSuccess);
 
-    }
-
-    [Fact(DisplayName = "AcessoAluno: 05:59 é inválido (1 minuto antes do limite)")]
-    public void Deve_Falhar_Quando_HorarioUmMinutoAntesDoLimite()
-    {
-        // Arrange
-        var aluno = Aluno.Criar(1, "João", "529.982.247-25", DateOnly.FromDateTime(DateTime.Today.AddYears(-20)),
-            "(11) 91234-5678", "user@example.com",
-            Logradouro.Criar(1, "12345-678", "Rua", "Bairro", "Cidade", "SP", "Brasil").Value!,
-            "123", "", "Abcdef", Arquivo.Criar(new byte[] { 1 }).Value!).Value!;
-        var dataHora = DateTime.Today.AddHours(5).AddMinutes(59);
-
-        // Act
-        var result = AcessoAluno.Criar(1, aluno, dataHora);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains(result.Notifications, n => n.Mensagem == "DATA_HORA_INTERVALO_INVALIDO");
     }
 
 }
